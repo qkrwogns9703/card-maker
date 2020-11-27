@@ -7,8 +7,6 @@ import AuthService from './service/auth_service';
 const authService = new AuthService();
 
 ReactDOM.render(
-	<React.StrictMode>
-		<App authService={authService} />
-	</React.StrictMode>,
+	<App authService={authService} />,
 	document.getElementById('root')
 );
