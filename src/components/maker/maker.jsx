@@ -5,51 +5,33 @@ import Footer from '../footer/footer';
 import Header from '../header/header';
 import Preview from '../preview/preview';
 import styles from './maker.module.css';
-const Maker = ({ authService, FileInput }) => {
-	const [cards, setCards] = useState({
-		1: {
-			id: '1',
-			name: 'JaeHun',
-			company: 'PeaceMinusOne',
-			theme: 'light',
-			title: 'Software Engineer',
-			email: 'jaehunb350@gmail.com',
-			message: 'go for it',
-			fileName: 'jaehun',
-			fileURL: null,
-		},
-		2: {
-			id: '2',
-			name: 'JaeHun',
-			company: 'PeaceMinusOne',
-			theme: 'dark',
-			title: 'Software Engineer',
-			email: 'jaehunb350@gmail.com',
-			message: 'go for it',
-			fileName: 'jaehun',
-			fileURL: null,
-		},
-		3: {
-			id: '3',
-			name: 'JaeHun',
-			company: 'PeaceMinusOne',
-			theme: 'colorful',
-			title: 'Software Engineer',
-			email: 'jaehunb350@gmail.com',
-			message: 'go for it',
-			fileName: 'jaehun',
-			fileURL: null,
-		},
-	});
-
+const Maker = ({ authService, FileInput, cardRepository }) => {
+	const historyState = useHistory();
+	const [cards, setCards] = useState({});
+	const [userId, setUserId] = useState(historyState && historyState.id);
 	const history = useHistory();
 	const onLogout = () => {
 		authService.logout();
 	};
 
 	useEffect(() => {
+		if (!userId) {
+			return;
+		}
+		const stopSync = cardRepository.syncCards(userId, cards => {
+			setCards(cards);
+		});
+		return () => {
+			stopSync();
+		};
+	}, [userId]);
+
+	useEffect(() => {
 		authService.onAuthChange(user => {
-			if (!user) {
+			if (user) {
+				setUserId(user.uid);
+				console.log(userId);
+			} else {
 				history.push('/');
 			}
 		});
@@ -59,12 +41,14 @@ const Maker = ({ authService, FileInput }) => {
 		const updated = { ...cards };
 		updated[card.id] = card;
 		setCards(updated);
+		cardRepository.saveCard(userId, card);
 	};
 
 	const deleteCard = card => {
 		const updated = { ...cards };
 		delete updated[card.id];
 		setCards(updated);
+		cardRepository.removeCard(userId, card);
 	};
 
 	return (
